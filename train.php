@@ -8,7 +8,7 @@ use Phpml\Regression\LeastSquares;
 use Phpml\ModelManager;
 
 // Load the data from the CSV file
-$file_path = 'Campania.csv';
+$file_path = 'csv/Campania.csv';
 $data = array_map('str_getcsv', file($file_path));
 array_walk($data, function(&$a) use ($data) {
     $a = array_combine($data[0], $a);

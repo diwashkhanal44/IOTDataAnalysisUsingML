@@ -1,16 +1,16 @@
 <?php
-error_reporting(E_ALL); // Show any errors if there are any
+error_reporting(E_ALL); 
 ini_set('display_errors', '1');
 ini_set('memory_limit', '512M'); 
 require_once __DIR__ . '/vendor/autoload.php';
 
 // Define the site models
 $site_models = [
-    1 => ['location' => 'Campania', 'filename' => 'Campania.csv'],
-    2 => ['location' => 'Hobart', 'filename' => 'Hobart.csv'],
-    3 => ['location' => 'Launceston', 'filename' => 'Launceston.csv'],
-    4 => ['location' => 'Smithton', 'filename' => 'Smithton.csv'],
-    5 => ['location' => 'Wynyard', 'filename' => 'Wynyard.csv']
+    1 => ['location' => 'Campania', 'filename' => 'csv/Campania.csv'],
+    2 => ['location' => 'Hobart', 'filename' => 'csv/Hobart.csv'],
+    3 => ['location' => 'Launceston', 'filename' => 'csv/Launceston.csv'],
+    4 => ['location' => 'Smithton', 'filename' => 'csv/Smithton.csv'],
+    5 => ['location' => 'Wynyard', 'filename' => 'csv/Wynyard.csv']
 ];
 
 // Function to read selected day and site from the XML file
@@ -73,12 +73,11 @@ try {
         'average_humidities' => $average_humidities,
         'average_temperatures' => $average_temperatures,
         'location' => $site_models[$selected_site]['location'],
-        'date' => $selected_date
+        'date' => "$month-$day"
     ];
 } catch (Exception $e) {
     die('Error: ' . $e->getMessage());
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -94,10 +93,10 @@ try {
     <button onclick="showGraph('humidity')">Show Humidity Graph</button>
 
     <div id="temperatureGraph" style="height: 370px; width: 100%; display:none;">
-        <canvas id="temperatureChart"></canvas>
+        <div id="temperatureChart" style="height: 370px; width: 100%;"></div>
     </div>
     <div id="humidityGraph" style="height: 370px; width: 100%; display:none;">
-        <canvas id="humidityChart"></canvas>
+        <div id="humidityChart" style="height: 370px; width: 100%;"></div>
     </div>
 
     <script>
@@ -160,17 +159,16 @@ try {
         const temperatureChart = new CanvasJS.Chart("temperatureChart", temperatureConfig);
         const humidityChart = new CanvasJS.Chart("humidityChart", humidityConfig);
 
-        temperatureChart.render();
-        humidityChart.render();
-
         function showGraph(graph) {
             document.getElementById('temperatureGraph').style.display = 'none';
             document.getElementById('humidityGraph').style.display = 'none';
 
             if (graph === 'temperature') {
                 document.getElementById('temperatureGraph').style.display = 'block';
+                temperatureChart.render();
             } else if (graph === 'humidity') {
                 document.getElementById('humidityGraph').style.display = 'block';
+                humidityChart.render();
             }
         }
 

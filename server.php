@@ -71,16 +71,16 @@ function predict_max_min_temp_humidity($date_to_predict, $site) {
 }
 
 // Function to save data to an XML file and append new entries
-function save_to_xml($date, $site, $prediction) {
-    $file_name = 'dateSitePrediction.xml';
+function save_to_xml($date, $site) {
+    $file_name = 'dateAndSite.xml';
     
     if (file_exists($file_name)) {
         $xml = simplexml_load_file($file_name);
     } else {
-        $xml = new SimpleXMLElement('<predictions/>');
+        $xml = new SimpleXMLElement('<DateAndSite/>');
     }
     
-    $entry = $xml->addChild('prediction');
+    $entry = $xml->addChild('entry');
     $entry->addChild('date', $date);
     $entry->addChild('site', $site);
     
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'GET') {
         $prediction = predict_max_min_temp_humidity($date_to_predict, $site);
         
         // Save the results to an XML file
-        save_to_xml($date_to_predict, $site, $prediction);
+        save_to_xml($date_to_predict, $site);
 
         // Output the results
         echo json_encode($prediction);
