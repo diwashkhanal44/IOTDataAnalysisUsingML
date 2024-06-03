@@ -6,10 +6,10 @@ class IotDevice:
     def __init__(self):
         self.sense = SenseHat()
         self.current_date = {'day': 1, 'month': 1, 'year': 2022}
-        self.current_mode = 'normal'  
+        self.current_mode = 'normal'  # 'normal', 'setup', 'date_entry', 'day', 'month'
         self.site_number = 1
         self.prediction = None
-        self.display_mode = 'temperature'  
+        self.display_mode = 'temperature'  # 'temperature', 'humidity'
         self.current_color = (0, 0, 0)
 
     def send_request(self, date, site):
@@ -22,7 +22,7 @@ class IotDevice:
         }
         try:
             print("Sending request to server...")
-            response = requests.get(web_server, params=payload)  
+            response = requests.get(web_server, params=payload)  # Use GET with query parameters
             print("Request sent.")
             if response.status_code == 200:
                 print("Success!")
@@ -61,6 +61,7 @@ class IotDevice:
             elif event.direction == 'left' or event.direction == 'right':
                 self.display_mode = 'temperature' if self.display_mode == 'humidity' else 'humidity'
                 self.update_display()
+                self.update_screen_color()
         elif self.current_mode == 'setup':
             if event.direction == 'up':
                 self.site_number = min(self.site_number + 1, 5)
@@ -81,6 +82,9 @@ class IotDevice:
             elif event.direction == 'middle':
                 self.current_mode = 'normal'
                 self.prediction = self.send_request(self.current_date, self.site_number)
+                if self.prediction:
+                    self.display_text('')
+                    self.update_screen_color()
         elif self.current_mode == 'day':
             if event.direction == 'up':
                 self.current_date['day'] = min(self.current_date['day'] + 1, 31)
@@ -96,6 +100,7 @@ class IotDevice:
                 self.prediction = self.send_request(self.current_date, self.site_number)
                 if self.prediction:
                     self.display_text('Prediction Set')
+                    self.update_screen_color()
         elif self.current_mode == 'month':
             if event.direction == 'up':
                 self.current_date['month'] = min(self.current_date['month'] + 1, 12)
@@ -110,30 +115,37 @@ class IotDevice:
                 self.current_mode = 'normal'
                 self.prediction = self.send_request(self.current_date, self.site_number)
                 if self.prediction:
-                    self.display_text('Prediction Set')
+                    self.display_text('P')
+                    self.update_screen_color()
+
+    def update_screen_color(self):
+        if self.current_mode == 'normal' and self.prediction:
+            current_temp = self.sense.get_temperature()
+            current_humidity = self.sense.get_humidity()
+
+            if self.display_mode == 'temperature':
+                if self.check_within_range(current_temp, self.prediction['min_temperature'], self.prediction['max_temperature']):
+                    self.set_screen_color((0, 255, 0))
+                    return
+                else:
+                    self.set_screen_color((255, 0, 0))
+            else:
+                if self.check_within_range(current_humidity, self.prediction['min_humidity'], self.prediction['max_humidity']):
+                    self.set_screen_color((0, 255, 0))
+                    return
+                else:
+                    self.set_screen_color((255, 0, 0))
 
     def run(self):
         self.sense.stick.direction_any = self.handle_joystick
-        self.display_text('Nor Mo')
+        self.display_text('N M')
 
         while True:
             if self.current_mode == 'normal' and self.prediction:
-                current_temp = self.sense.get_temperature()
-                current_humidity = self.sense.get_humidity()
-
-                if self.display_mode == 'temperature':
-                    if self.check_within_range(current_temp, self.prediction['min_temperature'], self.prediction['max_temperature']):
-                        self.set_screen_color((0, 255, 0))
-                    else:
-                        self.set_screen_color((255, 0, 0))
-                else:
-                    if self.check_within_range(current_humidity, self.prediction['min_humidity'], self.prediction['max_humidity']):
-                        self.set_screen_color((0, 255, 0))
-                    else:
-                        self.set_screen_color((255, 0, 0)) 
-
+                self.update_screen_color()
             time.sleep(1)
 
 if __name__ == "__main__":
     device = IotDevice()
     device.run()
+
